@@ -470,8 +470,10 @@ static ssize_t local_get_buffer(const struct iio_device *dev,
 		}
 
 		last_block->bytes_used = bytes_used;
+        printf("local_get_buffer: ioctl(%d, BLOCK_ENQUEUE_IOCTL, %p)\n", f, last_block);
 		ret = (ssize_t) ioctl_nointr(f,
 				BLOCK_ENQUEUE_IOCTL, last_block);
+        printf("ret = %zd\n", ret);
 		if (ret) {
 			ret = (ssize_t) -errno;
 			iio_strerror(errno, err_str, sizeof(err_str));
@@ -495,7 +497,9 @@ static ssize_t local_get_buffer(const struct iio_device *dev,
 			return ret;
 
 		memset(&block, 0, sizeof(block));
+        printf("local_get_buffer: ioctl(%d, BLOCK_DEQUEUE_IOCTL, %p)\n", f, &block);
 		ret = (ssize_t) ioctl_nointr(f, BLOCK_DEQUEUE_IOCTL, &block);
+        printf("ret = %zd\n", ret);
 	} while (pdata->blocking && ret == -1 && errno == EAGAIN);
 
 	if (ret) {
@@ -826,7 +830,9 @@ static int enable_high_speed(const struct iio_device *dev)
 	 * never fail if the device supports the high-speed interface, so we use it
 	 * here. Calling it when no blocks are allocated the ioctl has no effect.
 	 */
+    printf("enable_high_speed: ioctl(%d, BLOCK_FREE_IOCTL, NULL)\n", fd);
 	ret = ioctl_nointr(fd, BLOCK_FREE_IOCTL, NULL);
+    printf("ret = %d\n", ret);
 	if (ret < 0)
 		return -ENOSYS;
 
@@ -855,7 +861,9 @@ static int enable_high_speed(const struct iio_device *dev)
 		iio_device_get_sample_size_mask(dev, dev->mask, dev->words);
 	req.count = nb_blocks;
 
+    printf("enable_high_speed: ioctl(%d, BLOCK_ALLOC_IOCTL, %p)\n", fd, &req);
 	ret = ioctl_nointr(fd, BLOCK_ALLOC_IOCTL, &req);
+    printf("ret = %d\n", ret);
 	if (ret < 0) {
 		ret = -errno;
 		goto err_freemem;
@@ -872,13 +880,17 @@ static int enable_high_speed(const struct iio_device *dev)
 	/* mmap all the blocks */
 	for (i = 0; i < pdata->allocated_nb_blocks; i++) {
 		pdata->blocks[i].id = i;
+        printf("enable_high_speed: ioctl(%d, BLOCK_QUERY_IOCTL, %p)\n", fd, &pdata->blocks[i]);
 		ret = ioctl_nointr(fd, BLOCK_QUERY_IOCTL, &pdata->blocks[i]);
+        printf("ret = %d\n", ret);
 		if (ret) {
 			ret = -errno;
 			goto err_munmap;
 		}
 
+        printf("enable_high_speed: ioctl(%d, BLOCK_ENQUEUE_IOCTL, %p)\n", fd, &pdata->blocks[i]);
 		ret = ioctl_nointr(fd, BLOCK_ENQUEUE_IOCTL, &pdata->blocks[i]);
+        printf("ret = %d\n", ret);
 		if (ret) {
 			ret = -errno;
 			goto err_munmap;
@@ -900,7 +912,8 @@ err_munmap:
 	for (; i > 0; i--)
 		munmap(pdata->addrs[i - 1], pdata->blocks[i - 1].size);
 err_block_free:
-	ioctl_nointr(fd, BLOCK_FREE_IOCTL, 0);
+    printf("enable_high_speed: ioctl(%d, BLOCK_FREE_IOCTL, 0)\n", fd);
+	printf("ret = %d\n", ioctl_nointr(fd, BLOCK_FREE_IOCTL, 0));
 	pdata->allocated_nb_blocks = 0;
 err_freemem:
 	free(pdata->addrs);
@@ -1019,7 +1032,8 @@ static int local_close(const struct iio_device *dev)
 		unsigned int i;
 		for (i = 0; i < pdata->allocated_nb_blocks; i++)
 			munmap(pdata->addrs[i], pdata->blocks[i].size);
-		ioctl_nointr(pdata->fd, BLOCK_FREE_IOCTL, 0);
+        printf("local_close: ioctl(%d, BLOCK_FREE_IOCTL, 0)\n", pdata->fd);
+        printf("ret = %d\n", ioctl_nointr(pdata->fd, BLOCK_FREE_IOCTL, 0));
 		pdata->allocated_nb_blocks = 0;
 		free(pdata->addrs);
 		pdata->addrs = NULL;
