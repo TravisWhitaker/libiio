@@ -471,6 +471,7 @@ static ssize_t local_get_buffer(const struct iio_device *dev,
 
 		last_block->bytes_used = bytes_used;
         printf("local_get_buffer: ioctl(%d, BLOCK_ENQUEUE_IOCTL, %p)\n", f, last_block);
+        fgetc(stdin);
 		ret = (ssize_t) ioctl_nointr(f,
 				BLOCK_ENQUEUE_IOCTL, last_block);
         printf("ret = %zd\n", ret);
@@ -498,6 +499,7 @@ static ssize_t local_get_buffer(const struct iio_device *dev,
 
 		memset(&block, 0, sizeof(block));
         printf("local_get_buffer: ioctl(%d, BLOCK_DEQUEUE_IOCTL, %p)\n", f, &block);
+        fgetc(stdin);
 		ret = (ssize_t) ioctl_nointr(f, BLOCK_DEQUEUE_IOCTL, &block);
         printf("ret = %zd\n", ret);
 	} while (pdata->blocking && ret == -1 && errno == EAGAIN);
@@ -831,6 +833,7 @@ static int enable_high_speed(const struct iio_device *dev)
 	 * here. Calling it when no blocks are allocated the ioctl has no effect.
 	 */
     printf("enable_high_speed: ioctl(%d, BLOCK_FREE_IOCTL, NULL)\n", fd);
+    fgetc(stdin);
 	ret = ioctl_nointr(fd, BLOCK_FREE_IOCTL, NULL);
     printf("ret = %d\n", ret);
 	if (ret < 0)
@@ -862,6 +865,7 @@ static int enable_high_speed(const struct iio_device *dev)
 	req.count = nb_blocks;
 
     printf("enable_high_speed: ioctl(%d, BLOCK_ALLOC_IOCTL, %p)\n", fd, &req);
+    fgetc(stdin);
 	ret = ioctl_nointr(fd, BLOCK_ALLOC_IOCTL, &req);
     printf("ret = %d\n", ret);
 	if (ret < 0) {
@@ -881,6 +885,7 @@ static int enable_high_speed(const struct iio_device *dev)
 	for (i = 0; i < pdata->allocated_nb_blocks; i++) {
 		pdata->blocks[i].id = i;
         printf("enable_high_speed: ioctl(%d, BLOCK_QUERY_IOCTL, %p)\n", fd, &pdata->blocks[i]);
+        fgetc(stdin);
 		ret = ioctl_nointr(fd, BLOCK_QUERY_IOCTL, &pdata->blocks[i]);
         printf("ret = %d\n", ret);
 		if (ret) {
@@ -889,6 +894,7 @@ static int enable_high_speed(const struct iio_device *dev)
 		}
 
         printf("enable_high_speed: ioctl(%d, BLOCK_ENQUEUE_IOCTL, %p)\n", fd, &pdata->blocks[i]);
+        fgetc(stdin);
 		ret = ioctl_nointr(fd, BLOCK_ENQUEUE_IOCTL, &pdata->blocks[i]);
         printf("ret = %d\n", ret);
 		if (ret) {
