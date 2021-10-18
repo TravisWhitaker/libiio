@@ -40,6 +40,7 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 	ssize_t ret = -EINVAL;
 	struct iio_buffer *buf;
 	ssize_t sample_size = iio_device_get_sample_size(dev);
+    printf("iio_device_get_sample_size: %zd\n", sample_size);
 
 	if (!sample_size || !samples_count)
     {
@@ -77,6 +78,7 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 	memcpy(buf->mask, dev->mask, dev->words * sizeof(*buf->mask));
 
 	ret = iio_device_open(dev, samples_count, cyclic);
+    printf("iio_device_open: %zd\n", ret);
 	if (ret < 0)
         printf("failing iio_device_open\n");
 		goto err_free_mask;
@@ -89,6 +91,7 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 		if (iio_device_is_tx(dev)) {
 			ret = dev->ctx->ops->get_buffer(dev, &buf->buffer,
 					buf->length, buf->mask, dev->words);
+            printf("dev->>>get_buffer: %zd\n", ret);
 			if (ret < 0)
                 printf("failing in device->>>get_buffer\n");
 				goto err_close_device;
@@ -103,6 +106,7 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 	}
 
 	ret = iio_device_get_sample_size_mask(dev, buf->mask, dev->words);
+    printf("iio_device_get_sample_size: %zd\n", ret);
 	if (ret < 0)
         printf("failing in iio_device_get_sample_size_mask\n");
 		goto err_close_device;
@@ -112,12 +116,16 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 	return buf;
 
 err_close_device:
+    printf("err_close_device\n");
 	iio_device_close(dev);
 err_free_mask:
+    printf("err_free_mask\n");
 	free(buf->mask);
 err_free_buf:
+    printf("err_free_buf\n");
 	free(buf);
 err_set_errno:
+    printf("err_set_errno\n");
 	errno = -(int)ret;
 	return NULL;
 }
