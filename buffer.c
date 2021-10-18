@@ -80,8 +80,10 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 	ret = iio_device_open(dev, samples_count, cyclic);
     printf("iio_device_open: %zd\n", ret);
 	if (ret < 0)
+    {
         printf("failing iio_device_open\n");
 		goto err_free_mask;
+    }
 
 	buf->dev_is_high_speed = device_is_high_speed(dev);
 	if (buf->dev_is_high_speed) {
