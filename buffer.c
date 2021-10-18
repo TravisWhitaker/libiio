@@ -20,6 +20,7 @@
 #include "iio-private.h"
 
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 
 static bool device_is_high_speed(const struct iio_device *dev)
@@ -41,15 +42,20 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 	ssize_t sample_size = iio_device_get_sample_size(dev);
 
 	if (!sample_size || !samples_count)
+    {
+        printf("failing in !sample_size || !samples_count\nsample_size: %zd\nsamples_count: %zu\n", sample_size, samples_count);
 		goto err_set_errno;
+    }
 
 	if (sample_size < 0) {
+        printf("failing in sample_size < 0\n sample_size: %zd\n", sample_size);
 		ret = sample_size;
 		goto err_set_errno;
 	}
 
 	buf = malloc(sizeof(*buf));
 	if (!buf) {
+        printf("failing in malloc\n");
 		ret = -ENOMEM;
 		goto err_set_errno;
 	}
@@ -59,6 +65,7 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 	buf->dev = dev;
 	buf->mask = calloc(dev->words, sizeof(*buf->mask));
 	if (!buf->mask) {
+        printf("failing in !buf->mask\n");
 		ret = -ENOMEM;
 		goto err_free_buf;
 	}
@@ -71,6 +78,7 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 
 	ret = iio_device_open(dev, samples_count, cyclic);
 	if (ret < 0)
+        printf("failing iio_device_open\n");
 		goto err_free_mask;
 
 	buf->dev_is_high_speed = device_is_high_speed(dev);
@@ -82,11 +90,13 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 			ret = dev->ctx->ops->get_buffer(dev, &buf->buffer,
 					buf->length, buf->mask, dev->words);
 			if (ret < 0)
+                printf("failing in device->>>get_buffer\n");
 				goto err_close_device;
 		}
 	} else {
 		buf->buffer = malloc(buf->length);
 		if (!buf->buffer) {
+            printf("failing in buf->buffer\n");
 			ret = -ENOMEM;
 			goto err_close_device;
 		}
@@ -94,6 +104,7 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 
 	ret = iio_device_get_sample_size_mask(dev, buf->mask, dev->words);
 	if (ret < 0)
+        printf("failing in iio_device_get_sample_size_mask\n");
 		goto err_close_device;
 
 	buf->sample_size = (unsigned int) ret;
