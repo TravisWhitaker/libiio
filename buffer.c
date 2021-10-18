@@ -95,8 +95,10 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 					buf->length, buf->mask, dev->words);
             printf("dev->>>get_buffer: %zd\n", ret);
 			if (ret < 0)
+            {
                 printf("failing in device->>>get_buffer\n");
 				goto err_close_device;
+            }
 		}
 	} else {
 		buf->buffer = malloc(buf->length);
@@ -110,8 +112,10 @@ struct iio_buffer * iio_device_create_buffer(const struct iio_device *dev,
 	ret = iio_device_get_sample_size_mask(dev, buf->mask, dev->words);
     printf("iio_device_get_sample_size: %zd\n", ret);
 	if (ret < 0)
+    {
         printf("failing in iio_device_get_sample_size_mask\n");
 		goto err_close_device;
+    }
 
 	buf->sample_size = (unsigned int) ret;
 	buf->data_length = buf->length;
